@@ -1,0 +1,8 @@
+*.sqlite*
+/storage/*.key
+/vendor
+.env
+/.idea
+composer.lock
+/public/hot
+/node_modules
