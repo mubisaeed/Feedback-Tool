@@ -42,7 +42,7 @@ Route::group(['middleware' => 'auth'], function () {
             Route::post('comment/store', [FeedbackController::class, 'comment'])
                 ->name('feedback.comment')
                 ->middleware('permission.check:feedback-send-comment');
-            Route::get('/user-suggestions', [FeedbackController::class, 'getUserSuggestions']);
+            Route::get('search-users', [FeedbackController::class, 'searchUsers']);
         });
 });
 

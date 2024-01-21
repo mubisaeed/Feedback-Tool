@@ -76,13 +76,11 @@ class FeedbackService
         }
     }
 
-    public function getUserSuggestions(Request $request): JsonResponse
+    public function searchUsers(Request $request): JsonResponse
     {
-        $query = $request->get('query');
-
-        // Perform a query to fetch users based on the input $query
-        $users = User::where('name', 'like', "%$query%")->pluck('name');
-        return response()->json($users);
+        $query = $request->input('query');
+        $users = User::where('name', 'like', "%$query%")->get();
+        return response()->json(['users' => $users]);
     }
 
     /**
@@ -93,19 +91,19 @@ class FeedbackService
     {
         try{
             $validator = Validator::make($request->all(), [
-                'content' => 'required'
+                'comment' => 'required'
             ], [
-                'content.required' => 'Write your comment first.',
+                'comment.required' => 'Write your comment first.',
             ]);
             if ($validator->fails())
                 return redirect()->back()->with('error', $validator->errors()->first())->withInput();
 
             Comment::create([
                 'feedback_id' => $request->feedback_id,
-                'content' => $request->content,
+                'content' => $request->comment,
                 'user_id' => auth()->user()->id
             ]);
-            return redirect()->route('feedback.index')->with('success', 'Comment sent successfully.');
+            return redirect()->back()->with('success', 'Comment sent successfully.');
         } catch (Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }

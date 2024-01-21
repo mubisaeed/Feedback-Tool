@@ -59,9 +59,9 @@ class FeedbackController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getUserSuggestions(Request $request): JsonResponse
+    public function searchUsers(Request $request): JsonResponse
     {
-        return $this->feedbackService->getUserSuggestions($request);
+        return $this->feedbackService->searchUsers($request);
     }
 
     /**

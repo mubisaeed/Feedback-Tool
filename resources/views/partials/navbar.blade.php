@@ -9,7 +9,7 @@
 
         <div class="navbar-brand flex-1 flex-lg-0">
             <a href="{{route('feedback.index')}}" class="d-inline-flex align-items-center">
-                <img src="{{asset('logo/img.png')}}" alt="">
+                <img src="{{asset('images/img.png')}}" alt="">
             </a>
         </div>
 

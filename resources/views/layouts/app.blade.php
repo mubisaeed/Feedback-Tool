@@ -8,7 +8,6 @@
     <title>{{config('app.name')}}</title>
 
     <!-- Global stylesheets -->
-    <link href="{{asset('css/inter.css')}}" rel="stylesheet" type="text/css">
     <link href="{{asset('css/styles.min.css')}}" rel="stylesheet" type="text/css">
     <link href="{{asset('css/all.min.css')}}" id="stylesheet" rel="stylesheet" type="text/css">
     <!-- /global stylesheets -->
@@ -35,16 +34,9 @@
 </div>
 @stack('footer-modal')
 <!-- Core JS files -->
-<script src="{{asset('js/demo_configurator.js')}}"></script>
 <script src="{{asset('js/bootstrap.bundle.min.js')}}"></script>
 <!-- /core JS files -->
 <script src="{{asset('js/app.js')}}"></script>
-<script src="{{asset('js/dashboard.js')}}"></script>
-<script src="{{asset('js/jquery.min.js')}}"></script>
-<script src="{{asset('js/form_layouts.js')}}"></script>
-<script src="{{asset('js/select2.min.js')}}"></script>
-<script src="{{asset('js/table_elements.js')}}"></script>
-<script src="{{asset('js/form_select2.js')}}"></script>
 @stack('scripts')
 </body>
 </html>
