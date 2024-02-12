@@ -34,33 +34,27 @@
             </div>
         </div>
 
-        <div class="toolbar">
-            <button style="border: none;background: #F3F4F6; color: #8f2929 " onclick="toggleBold()">Bold</button>
-            <span>(Click on Bold button after text select to bold.)</span>
-        </div>
-
     @can('feedback-send-comment')
         <div class="card">
             <div class="card-body">
-                <form action="{{route('feedback.comment')}}" method="POST">
+                <form action="{{ route('feedback.comment') }}" method="POST">
                     @csrf
-                    <input type="hidden" name="feedback_id" value="{{$feedback->id}}">
-                    <div class="mb-3" >
+                    <input type="hidden" name="feedback_id" value="{{ $feedback->id }}">
+                    <div class="mb-3">
                         <label class="form-label fw-semibold">Comment: <span style="color: red;">*</span></label>
                         <textarea class="form-control" id="comment" name="comment"></textarea>
-
-                        <!-- Suggestions Popup -->
                         <div id="suggestions" style="display: none; border: 1px solid #ccc; position: absolute; background: #fff; max-height: 150px; overflow-y: auto;"></div>
                     </div>
                     <div class="text-end">
-                        <a href="{{route('feedback.index')}}" class="btn btn btn-light">Cancel</a>
+                        <a href="{{ route('feedback.index') }}" class="btn btn btn-light">Cancel</a>
                         <button type="submit" class="btn btn-primary ms-3">Comment <i class="ph-paper-plane-tilt ms-2"></i></button>
                     </div>
                 </form>
             </div>
         </div>
-        @endcan
-    </div>
+    @endcan
+
+    <!-- Your existing content here -->
 @endsection
 
 <style>
@@ -69,79 +63,95 @@
         cursor: pointer;
         border-bottom: 1px solid #ccc;
     }
+
     .suggestion-item:last-child {
         border-bottom: none;
     }
+
     .highlighted-mention {
         color: blue; /* You can customize the styling here */
         font-weight: bold;
     }
+
     .toolbar {
         margin-bottom: 10px;
     }
 </style>
 
 @push('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.0.0/classic/ckeditor.js"></script>
     <script>
         $(document).ready(function () {
             const commentInput = $('#comment');
             const suggestionsContainer = $('#suggestions');
-            commentInput.on('input', function () {
-                const inputValue = $(this).val();
-                const cursorPosition = commentInput.prop('selectionStart');
-                const textBeforeCursor = inputValue.substring(0, cursorPosition);
+            let editor;
+            ClassicEditor
+                .create(document.querySelector('textarea[name="comment"]'))
+                .then(ckEditor => {
+                    editor = ckEditor;
 
-                if (textBeforeCursor.endsWith('@')) {
-                    const query = inputValue.split('@')[1].split(' ')[0];
-                    const url = 'http://127.0.0.1:8000/feedback/search-users';
+                    editor.model.document.on('change:data', () => {
+                        const editorData = editor.getData();
+                        const matches = editorData.match(/@(\w+)/g);
 
-                    axios.get(url)
-                        .then(response => {
-                            const users = response.data.users;
-                            suggestionsContainer.empty();
+                        if (matches) {
+                            const lastMatch = matches[matches.length - 1];
+                            const query = lastMatch.substring(1); // Remove '@' from the query
 
-                            if (users.length > 0) {
-                                let suggestionItem = '';
-                                $.each(users, function (index, data) {
-                                    suggestionItem += '<div class="suggestion-item">'+ data.name + '</div>';
-                                });
-                                suggestionsContainer.append(suggestionItem);
-                                suggestionsContainer.show();
+                            if (query.length > 0) {
+                                fetchUsers(query);
                             } else {
                                 suggestionsContainer.hide();
                             }
-                        })
-                        .catch(error => {
-                            console.error(error);
-                        });
-                } else {
-                    suggestionsContainer.hide();
-                }
-            });
+                        } else {
+                            suggestionsContainer.hide();
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+
+            function fetchUsers(query) {
+                $.ajax({
+                    url: '{{ route("search-users") }}',
+                    method: 'GET',
+                    data: {query: query},
+                    success: function (data) {
+                        const users = data.users;
+                        suggestionsContainer.empty();
+
+                        if (users.length > 0) {
+                            let suggestionItem = '';
+                            $.each(users, function (index, user) {
+                                suggestionItem += '<div class="suggestion-item">' + user.name + '</div>';
+                            });
+                            suggestionsContainer.html(suggestionItem);
+                            suggestionsContainer.show();
+                        } else {
+                            suggestionsContainer.hide();
+                        }
+                    },
+                    error: function (error) {
+                        console.error(error);
+                    }
+                });
+            }
+
             suggestionsContainer.on('click', '.suggestion-item', function () {
                 const username = $(this).text().trim();
-                const currentComment = commentInput.val();
-                const cursorPosition = commentInput.prop('selectionStart');
+
+                const currentComment = editor.getData();
+                const cursorPosition = editor.model.document.selection.anchor.offset;
                 const beforeCursor = currentComment.substring(0, cursorPosition);
                 const afterCursor = currentComment.substring(cursorPosition);
                 const isAtSymbolBeforeCursor = beforeCursor.trim().endsWith('@');
-                commentInput.val(isAtSymbolBeforeCursor ? beforeCursor + username + ' ' + afterCursor : beforeCursor + '@' + username + ' ' + afterCursor);
+                const newComment = isAtSymbolBeforeCursor ? beforeCursor.replace(/@(\w*)$/, '@' + username) + ' ' + afterCursor : beforeCursor + '@' + username + ' ' + afterCursor;
+
+                editor.setData(newComment);
                 suggestionsContainer.hide();
             });
         });
-
-        function toggleBold() {
-            const textarea = document.getElementById('comment');
-            const selectedText = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd);
-
-            if (selectedText !== '') {
-                const boldText = '<strong>' + selectedText + '</strong>';
-                const textBeforeCursor = textarea.value.substring(0, textarea.selectionStart);
-                const textAfterCursor = textarea.value.substring(textarea.selectionEnd);
-                textarea.value = textBeforeCursor + boldText + textAfterCursor;
-            }
-        }
     </script>
 @endpush

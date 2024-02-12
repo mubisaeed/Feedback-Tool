@@ -79,7 +79,7 @@ class FeedbackService
     public function searchUsers(Request $request): JsonResponse
     {
         $query = $request->input('query');
-        $users = User::where('name', 'like', "%$query%")->get();
+        $users = User::select(['id', 'name'])->where('name', 'like', "%$query%")->get();
         return response()->json(['users' => $users]);
     }
 
